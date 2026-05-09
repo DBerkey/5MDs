@@ -156,10 +156,10 @@ async def on_ready():
 
 @bot.event
 async def on_command_error(ctx, error):
-    original_error = getattr(error, "original", error)
+    base_error = getattr(error, "original", error)
     if isinstance(error, commands.CommandNotFound):
         return
-    elif isinstance(original_error, discord.NotFound):
+    elif isinstance(base_error, discord.NotFound):
         return
     elif isinstance(error, commands.MissingPermissions):
         return
