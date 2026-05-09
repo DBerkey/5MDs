@@ -67,7 +67,7 @@ class AdminCommands(commands.Cog):
                 embed_title = msg.embeds[0].title
                 match = re.search(r"<t:(\d+):", embed_title)
                 if match is None:
-                    await ctx.channel.send("Could not find a timestamp in the embed title. Expected format like `<t:1234567890:T>`.")
+                    await ctx.channel.send("Could not find a timestamp in the embed title. Expected format like ``<t:1234567890:T>``.")
                     return
                 raid_energy_timer = int(match.group(1))
                 energy_global_timer = raid_energy_timer + 12 - 21600

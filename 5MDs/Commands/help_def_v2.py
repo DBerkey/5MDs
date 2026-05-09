@@ -1560,7 +1560,7 @@ async def help_v2(ctx, slash=None):
         path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data", "prefixes.json")
         with open(path, "r") as f:
             prefixes = json.load(f)
-        guild_id = str(ctx.guild.id) if getattr(ctx, "guild", None) else None
+        guild_id = str(ctx.guild.id) if ctx.guild is not None else None
         if guild_id and guild_id in prefixes:
             current_prefix = prefixes[guild_id]
         else:

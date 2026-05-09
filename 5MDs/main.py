@@ -105,7 +105,7 @@ async def daily_update():
 async def on_ready():
     print(f"✅ Startup complete. Bot running on {len(bot.guilds)} server with {bot.shard_count} shards.")
     print("on_ready")
-    if not getattr(bot, "_runtime_initialized", False):
+    if not getattr(bot, "_startup_initialized", False):
         await general.connect_to_db()
         await bot.add_cog(UserCommandsPrefix(bot))
         await bot.add_cog(UserCommandsPrefix_v2(bot))
@@ -113,7 +113,7 @@ async def on_ready():
         admin_cog = AdminCommands(bot)
         await bot.add_cog(admin_cog)
         bot.add_listener(reaction_add_listener, "on_raw_reaction_add")
-        bot._runtime_initialized = True
+        bot._startup_initialized = True
     else:
         admin_cog = bot.get_cog("AdminCommands")
     if not scheduler.running:
