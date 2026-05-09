@@ -1,4 +1,5 @@
 import re
+import os
 import discord
 import asyncio
 import json
@@ -18,8 +19,20 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
 
 
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DATA_DIR = os.path.join(BASE_DIR, "data")
+
+
+def data_file_path(filename):
+    return os.path.join(DATA_DIR, filename)
+
+
 async def get_prefix(bot, message):
+    if message.guild is None:
+        return default_prefix
     prefixes = await runtime.retrieve_data("prefixes")
+    if not isinstance(prefixes, dict):
+        return default_prefix
     return prefixes.get(str(message.guild.id), default_prefix)
 
 
@@ -28,6 +41,10 @@ intents.message_content = True
 default_prefix = "5"
 bot = commands.AutoShardedBot(command_prefix=get_prefix, intents=intents, help_command=None, max_messages=100)
 runtime.bot = bot
+bot.prefixes = {}
+bot.event_cards = {}
+bot.locations = {}
+bot.raid_comps = {}
 tree = bot.tree
 scheduler = AsyncIOScheduler(timezone=pytz.UTC)
 
@@ -88,13 +105,17 @@ async def daily_update():
 async def on_ready():
     print(f"✅ Startup complete. Bot running on {len(bot.guilds)} server with {bot.shard_count} shards.")
     print("on_ready")
-    await general.connect_to_db()
-    await bot.add_cog(UserCommandsPrefix(bot))
-    await bot.add_cog(UserCommandsPrefix_v2(bot))
-    await bot.load_extension("Commands.user_commands_slash")
-    admin_cog = AdminCommands(bot)
-    await bot.add_cog(admin_cog)
-    bot.add_listener(reaction_add_listener, "on_raw_reaction_add")
+    if not getattr(bot, "_startup_initialized", False):
+        await general.connect_to_db()
+        await bot.add_cog(UserCommandsPrefix(bot))
+        await bot.add_cog(UserCommandsPrefix_v2(bot))
+        await bot.load_extension("Commands.user_commands_slash")
+        admin_cog = AdminCommands(bot)
+        await bot.add_cog(admin_cog)
+        bot.add_listener(reaction_add_listener, "on_raw_reaction_add")
+        bot._startup_initialized = True
+    else:
+        admin_cog = bot.get_cog("AdminCommands")
     if not scheduler.running:
         scheduler.add_job(monthly_guild, CronTrigger(day=1, hour=1, minute=0, timezone=utc), id="monthly_guild")
         scheduler.add_job(weekly_guild, CronTrigger(day_of_week=0, hour=1, minute=0, timezone=utc), id="weekly_guild")
@@ -103,38 +124,44 @@ async def on_ready():
         print("[GUILD SCHEDULER] Guild scheduler has been started successfully.")
         print(f"[GUILD SCHEDULER] Jobs: {scheduler.get_jobs()}")
     try:
-        with open("data/event_cards.json", "r", encoding="utf-8") as f:
+        with open(data_file_path("event_cards.json"), "r", encoding="utf-8") as f:
             bot.event_cards = json.load(f)
-        with open("data/locations.json", "r", encoding="utf-8") as f:
+        with open(data_file_path("locations.json"), "r", encoding="utf-8") as f:
             bot.locations = json.load(f)
-        with open("data/prefixes.json", "r", encoding="utf-8") as f:
+        with open(data_file_path("prefixes.json"), "r", encoding="utf-8") as f:
             bot.prefixes = json.load(f)
-        with open("data/raid_comps.json", "r", encoding="utf-8") as f:
+        with open(data_file_path("raid_comps.json"), "r", encoding="utf-8") as f:
             bot.raid_comps = json.load(f)
         print("[JSON] Files loaded into memory.")
     except Exception as e:
         print(f"[JSON] Failed to load JSON files: {e}")
     try:
         base_tick_daily_watch = await general.get_global_daily_watch_timer()
-        bot.loop.create_task(admin_cog.sync_and_start_rotation_task(base_tick_daily_watch, bot))
-        print("[DAILY WATCH] Daily watch timer started.")
+        if admin_cog and not getattr(bot, "_daily_watch_started", False):
+            bot.loop.create_task(admin_cog.sync_and_start_rotation_task(base_tick_daily_watch, bot))
+            bot._daily_watch_started = True
+            print("[DAILY WATCH] Daily watch timer started.")
     except Exception as e:
         print(f"[DAILY WATCH] An error occurred while starting daily watch timer: {e}")
     try:
-        synced = await bot.tree.sync()
-        print(f"Synced {len(synced)} slash commands.")
+        if not getattr(bot, "_tree_synced", False):
+            synced = await bot.tree.sync()
+            bot._tree_synced = True
+            print(f"Synced {len(synced)} slash commands.")
     except Exception as e:
         print(f"An error occurred while syncing: {e}")
-    await update_activity.start()
+    if not update_activity.is_running():
+        update_activity.start()
 
 
 @bot.event
 async def on_command_error(ctx, error):
+    base_error = getattr(error, "original", error)
     if isinstance(error, commands.CommandNotFound):
         return
-    elif isinstance(error.original, NotFound):
+    elif isinstance(base_error, discord.NotFound):
         return
-    elif isinstance(error, MissingPermissions):
+    elif isinstance(error, commands.MissingPermissions):
         return
     else:
         return

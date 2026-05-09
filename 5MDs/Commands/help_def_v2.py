@@ -1557,11 +1557,11 @@ async def help_v2(ctx, slash=None):
         official_server = "https://discord.gg/EhdZtDsvtr"
         bot_invite = "https://discord.com/oauth2/authorize?client_id=1301954481851990037"
         dev_profile = "https://discord.com/users/274601299469795328"
-        path = os.path.join("data", "prefixes.json")
+        path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data", "prefixes.json")
         with open(path, "r") as f:
             prefixes = json.load(f)
-        guild_id = str(ctx.guild.id)
-        if guild_id in prefixes:
+        guild_id = str(ctx.guild.id) if ctx.guild is not None else None
+        if guild_id and guild_id in prefixes:
             current_prefix = prefixes[guild_id]
         else:
             current_prefix = "5"
