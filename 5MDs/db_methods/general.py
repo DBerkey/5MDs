@@ -9,6 +9,12 @@ cards_collection = None
 players_collection = None
 guilds_collection = None
 misc_collection = None
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+DATA_DIR = os.path.join(BASE_DIR, "data")
+
+
+def data_file_path(filename):
+    return os.path.join(DATA_DIR, filename)
 
 
 async def connect_to_db():
@@ -35,15 +41,15 @@ def get_misc_collection():
     return misc_collection
 
 def save_prefixes(prefixes):
-    with open("data/prefixes.json", "w") as f:
+    with open(data_file_path("prefixes.json"), "w", encoding="utf-8") as f:
         json.dump(prefixes, f, indent=4)
 
 
-def set_global_energy_timer(unix_timestamp):
+async def set_global_energy_timer(unix_timestamp):
     _id = ObjectId("67ae69c3cf53d633cb1cd358")
-    found_misc_collection = misc_collection.find({"_id": _id})
+    found_misc_collection = await misc_collection.find_one({"_id": _id})
     if found_misc_collection:
-        misc_collection.update_one({"_id": _id}, {"$set": {"energy_reset_timer": unix_timestamp}})
+        await misc_collection.update_one({"_id": _id}, {"$set": {"energy_reset_timer": unix_timestamp}})
     else:
         return
 

@@ -44,7 +44,7 @@ class AdminCommands(commands.Cog):
             current_timestamp = int(time.time())
             misc_information = general.get_misc_collection()
             update_values = {"$set": {"clan_shop_start_timer": f"{current_timestamp}", "clan_shop_counter": "0"}}
-            misc_information.update_one({"_id": ObjectId("67ae69c3cf53d633cb1cd358")}, update_values)
+            await misc_information.update_one({"_id": ObjectId("67ae69c3cf53d633cb1cd358")}, update_values)
             await ctx.channel.send(f"cl shop successfully updated to: {current_timestamp}")
         else:
             await ctx.channel.send("You don't have that permission peasant.")
@@ -61,11 +61,17 @@ class AdminCommands(commands.Cog):
             except asyncio.TimeoutError:
                 await ctx.channel.send("Command timeout.")
             else:
+                if not msg.embeds or not msg.embeds[0].title:
+                    await ctx.channel.send("No valid embed title was found in the message.")
+                    return
                 embed_title = msg.embeds[0].title
                 match = re.search(r"<t:(\d+):", embed_title)
+                if match is None:
+                    await ctx.channel.send("Could not find a timestamp in the embed title.")
+                    return
                 raid_energy_timer = int(match.group(1))
                 energy_global_timer = raid_energy_timer + 12 - 21600
-                general.set_global_energy_timer(energy_global_timer)
+                await general.set_global_energy_timer(energy_global_timer)
                 await ctx.channel.send(f"Timer set to: <t:{energy_global_timer}:T>\n"
                                        f"from raid timer: <t:{raid_energy_timer}:T>\n"
                                        f"unix timer: 1) {energy_global_timer} 2) {raid_energy_timer}")
