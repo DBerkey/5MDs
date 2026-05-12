@@ -2,7 +2,6 @@ import discord
 import re
 import asyncio
 import json
-import os
 import time
 import runtime
 from attr.validators import max_len
@@ -44,7 +43,6 @@ class UserCommandsPrefix_v2(commands.Cog):
         if not boss_query:
             await ctx.send("Please provide a boss name.")
             return
-        path = os.path.join("data", "raid_comps.json")
         rare_string = ""
         sr_string = f"{super_rare_1}{super_rare_2} **- Super Rare**\n"
         ur_string = f"{ultra_rare_1}{ultra_rare_2} **- Ultra Rare**\n"

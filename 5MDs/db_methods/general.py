@@ -1,7 +1,6 @@
 import json
-import os
+import config
 from bson import ObjectId
-from pymongo import MongoClient
 from motor.motor_asyncio import AsyncIOMotorClient
 
 client_db = None
@@ -13,7 +12,7 @@ misc_collection = None
 
 async def connect_to_db():
     global client_db, cards_collection, players_collection, guilds_collection, misc_collection
-    db_connection = "connection login for MongoDB access"
+    db_connection = config.MONGODB_URI
     client_db = AsyncIOMotorClient(db_connection)
     bot_db = client_db["discordbot"]
     cards_collection = bot_db["cards"]
@@ -35,7 +34,7 @@ def get_misc_collection():
     return misc_collection
 
 def save_prefixes(prefixes):
-    with open("data/prefixes.json", "w") as f:
+    with open(config.data_path("prefixes.json"), "w", encoding="utf-8") as f:
         json.dump(prefixes, f, indent=4)
 
 

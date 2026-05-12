@@ -1,0 +1,17 @@
+[Unit]
+Description=5MDs Discord Bot
+After=network.target
+
+[Service]
+Type=simple
+User=5mds
+WorkingDirectory=/opt/5MDs
+EnvironmentFile=/opt/5MDs/.env
+ExecStart=/opt/5MDs/.venv/bin/python /opt/5MDs/5MDs/main.py
+Restart=always
+RestartSec=10
+StandardOutput=append:/var/log/5mds/bot.log
+StandardError=append:/var/log/5mds/bot.err.log
+
+[Install]
+WantedBy=multi-user.target
