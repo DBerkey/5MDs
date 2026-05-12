@@ -15,7 +15,7 @@ python 5MDs/main.py
 
 DigitalOcean Droplet deployment docs and systemd unit:
 
-- `/home/runner/work/5MDs/5MDs/deploy/digitalocean/README.md`
-- `/home/runner/work/5MDs/5MDs/deploy/digitalocean/5mds.service`
+- `deploy/digitalocean/README.md`
+- `deploy/digitalocean/5mds.service`
 
 Copy `.env.example` to `.env` and configure required environment variables before starting.

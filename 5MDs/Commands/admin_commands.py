@@ -156,7 +156,6 @@ class AdminCommands(commands.Cog):
     async def _get_gc(self):
         if self.gc is None:
             try:
-                project_root = os.path.dirname(os.path.dirname(__file__))
                 service_file = config.GOOGLE_SHEETS_CREDENTIALS_FILE
                 loop = asyncio.get_running_loop()
                 self.gc = await loop.run_in_executor(None, lambda: pygsheets.authorize(service_file=service_file))
