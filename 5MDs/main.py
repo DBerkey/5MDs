@@ -4,6 +4,7 @@ import asyncio
 import json
 import io
 import runtime
+import config
 from discord.ext import commands, tasks
 from discord import app_commands, Container
 from db_methods import cards, general, players, guilds
@@ -25,14 +26,14 @@ async def get_prefix(bot, message):
 
 intents = discord.Intents.default()
 intents.message_content = True
-default_prefix = "5"
+default_prefix = config.DEFAULT_PREFIX
 bot = commands.AutoShardedBot(command_prefix=get_prefix, intents=intents, help_command=None, max_messages=100)
 runtime.bot = bot
 tree = bot.tree
 scheduler = AsyncIOScheduler(timezone=pytz.UTC)
 
-own_bot_id = 1012793992359972977
-target_bot_id = 571027211407196161
+own_bot_id = config.OWN_BOT_ID
+target_bot_id = config.TARGET_BOT_ID
 keyword_raid_lobby_1 = "Raid Challenge Timer"
 keyword_raid_lobby_2 = "Raid Lobby Timer"
 keyword_raid_lobby_2_part_2 = "Raid Party"
@@ -103,13 +104,13 @@ async def on_ready():
         print("[GUILD SCHEDULER] Guild scheduler has been started successfully.")
         print(f"[GUILD SCHEDULER] Jobs: {scheduler.get_jobs()}")
     try:
-        with open("data/event_cards.json", "r", encoding="utf-8") as f:
+        with open(config.data_path("event_cards.json"), "r", encoding="utf-8") as f:
             bot.event_cards = json.load(f)
-        with open("data/locations.json", "r", encoding="utf-8") as f:
+        with open(config.data_path("locations.json"), "r", encoding="utf-8") as f:
             bot.locations = json.load(f)
-        with open("data/prefixes.json", "r", encoding="utf-8") as f:
+        with open(config.data_path("prefixes.json"), "r", encoding="utf-8") as f:
             bot.prefixes = json.load(f)
-        with open("data/raid_comps.json", "r", encoding="utf-8") as f:
+        with open(config.data_path("raid_comps.json"), "r", encoding="utf-8") as f:
             bot.raid_comps = json.load(f)
         print("[JSON] Files loaded into memory.")
     except Exception as e:
@@ -303,5 +304,5 @@ async def on_close():
     print("[DATABASE] Database connection closed.")
 
 # 5md's
-bot.run("here goes the token")
+bot.run(config.DISCORD_BOT_TOKEN)
 

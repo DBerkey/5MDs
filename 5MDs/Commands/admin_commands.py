@@ -7,14 +7,15 @@ import pygsheets
 import os
 import psutil
 import runtime
+import config
 from bson import ObjectId
 from datetime import datetime, timezone
 from db_methods import general, players
 from discord.ext import commands
 from Commands import user_commands_prefix_definition
-LOG_FILE = "data/command_log.txt" # Logging the guide commands to prevent malicious editing - just in case...
-admins = () # List for all admins
-raid_guide_editors = () # List for all users to be able to access the commands
+LOG_FILE = config.data_path("command_log.txt") # Logging the guide commands to prevent malicious editing - just in case...
+admins = config.ADMIN_IDS # List for all admins
+raid_guide_editors = config.RAID_GUIDE_EDITOR_IDS # List for all users to be able to access the commands
 
 
 class AdminCommands(commands.Cog):
@@ -22,12 +23,12 @@ class AdminCommands(commands.Cog):
         self.bot = bot
         self.energy_tick_interval = 120         # 2min
         self.daily_watch_tick_interval = 43200  # 12h
-        self.daily_watch_channel_id_shop_view = 1376249740748128256
-        self.daily_watch_message_id_shop_view = 1376530332676784288
-        self.daily_watch_channel_id_shop_ping = 1376249501400043620
+        self.daily_watch_channel_id_shop_view = config.DAILY_WATCH_CHANNEL_ID_SHOP_VIEW
+        self.daily_watch_message_id_shop_view = config.DAILY_WATCH_MESSAGE_ID_SHOP_VIEW
+        self.daily_watch_channel_id_shop_ping = config.DAILY_WATCH_CHANNEL_ID_SHOP_PING
         self.gc = None
-        self.sheet_name_raid = ""
-        self.sheet_name_floor = ""
+        self.sheet_name_raid = config.RAID_SHEET_NAME
+        self.sheet_name_floor = config.FLOOR_SHEET_NAME
 
     @commands.command()
     async def ram(self, ctx):
@@ -156,7 +157,7 @@ class AdminCommands(commands.Cog):
         if self.gc is None:
             try:
                 project_root = os.path.dirname(os.path.dirname(__file__))
-                service_file = os.path.join(project_root, "data", "google_api_login.json")
+                service_file = config.GOOGLE_SHEETS_CREDENTIALS_FILE
                 loop = asyncio.get_running_loop()
                 self.gc = await loop.run_in_executor(None, lambda: pygsheets.authorize(service_file=service_file))
             except Exception as e:
@@ -213,8 +214,7 @@ class AdminCommands(commands.Cog):
                 bosses[boss][rarity][level] = {"teams": []}
             team_variants = [t.strip() for t in team.split("\n") if t.strip()]
             bosses[boss][rarity][level]["teams"].extend(team_variants)
-        project_root = os.path.dirname(os.path.dirname(__file__))
-        save_path = os.path.join(project_root, "data", "raid_comps.json")
+        save_path = str(config.data_path("raid_comps.json"))
         await loop.run_in_executor(None, self._save_json, save_path, bosses)
         await ctx.send(f"Raid comps saved: `{save_path}`")
 
@@ -261,7 +261,6 @@ class AdminCommands(commands.Cog):
             if boss not in data:
                 data[boss] = {"location_id": loc_num, "series": series, "teams": []}
             data[boss]["teams"].append({"rarity": rarity, "team": team, "note": note, "difficulty": difficulty})
-        project_root = os.path.dirname(os.path.dirname(__file__))
-        save_path = os.path.join(project_root, "data", "floor_comps.json")
+        save_path = str(config.data_path("floor_comps.json"))
         await loop.run_in_executor(None, self._save_json, save_path, data)
         await ctx.send(f"Floor teams saved: `{save_path}`")

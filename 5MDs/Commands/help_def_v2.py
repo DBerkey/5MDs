@@ -3,6 +3,7 @@ from discord import MediaGalleryItem
 from discord.ui import View, Button, MediaGallery, Thumbnail, Select
 import json
 import os
+import config
 
 picture_5mds = "https://cdn.discordapp.com/attachments/1027151586260156516/1337016553954213898/Memory_Diamonds.jpg"
 
@@ -1557,7 +1558,7 @@ async def help_v2(ctx, slash=None):
         official_server = "https://discord.gg/EhdZtDsvtr"
         bot_invite = "https://discord.com/oauth2/authorize?client_id=1301954481851990037"
         dev_profile = "https://discord.com/users/274601299469795328"
-        path = os.path.join("data", "prefixes.json")
+        path = config.data_path("prefixes.json")
         with open(path, "r") as f:
             prefixes = json.load(f)
         guild_id = str(ctx.guild.id)
